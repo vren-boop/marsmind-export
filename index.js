@@ -139,6 +139,25 @@ async function clickFirstVisibleOptional(page, selectors) {
   return false;
 }
 
+async function clickNthVisibleOptional(page, selector, indexes) {
+  if (!selector) {
+    return false;
+  }
+  const locator = page.locator(selector);
+  const count = await locator.count();
+  for (const index of indexes) {
+    if (count <= index) {
+      continue;
+    }
+    const candidate = locator.nth(index);
+    if (await candidate.isVisible().catch(() => false)) {
+      await candidate.click();
+      return true;
+    }
+  }
+  return false;
+}
+
 async function fillVisibleDateInputs(page, selectors, metricDate) {
   const uniqueSelectors = [...new Set(selectors.filter(Boolean))];
   const visibleInputs = [];
@@ -173,11 +192,22 @@ async function openDateRangeDropdown(page) {
     await page.locator(process.env.DATE_RANGE_SELECTOR).first().click();
     return;
   }
+  if (await clickNthVisibleOptional(page, ".ant-select-selector", [1, 0, 2])) {
+    return;
+  }
+  if (await clickNthVisibleOptional(page, "[role=\"combobox\"]", [1, 0, 2])) {
+    return;
+  }
+  if (await clickNthVisibleOptional(page, ".el-select, .el-input__wrapper", [1, 0, 2])) {
+    return;
+  }
   await clickFirstText(page, DATE_RANGE_DROPDOWN_TEXTS, "date-range dropdown");
 }
 
 async function selectCustomDateRange(page, metricDate) {
   const opened =
+    (await clickNthVisibleOptional(page, ".ant-select-selector", [1, 0, 2])) ||
+    (await clickNthVisibleOptional(page, "[role=\"combobox\"]", [1, 0, 2])) ||
     (await clickFirstVisibleOptional(page, [
       process.env.DATE_RANGE_SELECTOR,
       process.env.DATE_PICKER_SELECTOR,
