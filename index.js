@@ -284,7 +284,7 @@ async function loginToMarsMind(page) {
   await clickFirstVisible(page, loginButtonSelectors, "login button");
 
   await page.waitForLoadState("networkidle", { timeout: 60_000 }).catch(() => {});
-  await page.waitForTimeout(2_000);
+  await page.waitForTimeout(5_000);
 
   const loginPageStillVisible = await page
     .locator('input[id="password"], input[type="password"]')
@@ -298,12 +298,15 @@ async function loginToMarsMind(page) {
       .map((line) => line.trim())
       .filter(Boolean)
       .find((line) => /错误|失败|无效|验证码|用户名|密码/.test(line));
-    throw new Error(
-      `Login did not succeed${hint ? `: ${hint}` : ". Still on login page after submit."}`
+    console.warn(
+      `Login page still visible shortly after submit${hint ? `: ${hint}` : ""}. ` +
+        "Retrying data-export page after an additional wait."
     );
   }
 
+  await page.waitForTimeout(5_000);
   await page.goto(DATA_EXPORT_URL, { waitUntil: "networkidle", timeout: 60_000 }).catch(() => {});
+  await page.waitForTimeout(3_000);
   const loginPageReturned = await page
     .locator('input[id="username"], input[id="password"], input[type="password"]')
     .first()
