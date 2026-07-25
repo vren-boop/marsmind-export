@@ -28,6 +28,7 @@ jobs:
         env:
           MARSMIND_USERNAME: ${{ secrets.MARSMIND_USERNAME }}
           MARSMIND_PASSWORD: ${{ secrets.MARSMIND_PASSWORD }}
+          MARSMIND_STORAGE_STATE_BASE64: ${{ secrets.MARSMIND_STORAGE_STATE_BASE64 }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_SHEET_ID: "1nibt62SYKxDdF7QWt7tKnApUBDJ9KD14YeoCw3fJnfs"
           GOOGLE_WORKSHEET_NAME: "Wayfair AI助理 Daily Chats"

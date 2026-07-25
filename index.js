@@ -84,6 +84,16 @@ function parseGoogleCredentials() {
   return credentials;
 }
 
+function parseStorageState() {
+  const rawJson = process.env.MARSMIND_STORAGE_STATE_JSON;
+  const base64Json = process.env.MARSMIND_STORAGE_STATE_BASE64;
+  if (!rawJson && !base64Json) {
+    return null;
+  }
+  const jsonText = rawJson ? rawJson : Buffer.from(base64Json, "base64").toString("utf8");
+  return JSON.parse(jsonText);
+}
+
 async function fillFirstVisible(page, selectors, value, label) {
   for (const selector of selectors) {
     const locator = page.locator(selector).first();
@@ -115,6 +125,18 @@ async function clickFirstText(page, texts, label) {
     }
   }
   throw new Error(`Could not find ${label}. Tried: ${texts.join(", ")}.`);
+}
+
+async function isLoginPage(page) {
+  const passwordVisible = await page
+    .locator('input[id="password"], input[type="password"]')
+    .first()
+    .isVisible()
+    .catch(() => false);
+  if (passwordVisible) {
+    return true;
+  }
+  return page.getByText("登录", { exact: false }).first().isVisible().catch(() => false);
 }
 
 async function clickFirstTextIfVisible(page, texts) {
@@ -286,11 +308,7 @@ async function loginToMarsMind(page) {
   await page.waitForLoadState("networkidle", { timeout: 60_000 }).catch(() => {});
   await page.waitForTimeout(5_000);
 
-  const loginPageStillVisible = await page
-    .locator('input[id="password"], input[type="password"]')
-    .first()
-    .isVisible()
-    .catch(() => false);
+  const loginPageStillVisible = await isLoginPage(page);
   if (loginPageStillVisible) {
     const pageText = await page.locator("body").innerText().catch(() => "");
     const hint = pageText
@@ -307,11 +325,7 @@ async function loginToMarsMind(page) {
   await page.waitForTimeout(5_000);
   await page.goto(DATA_EXPORT_URL, { waitUntil: "networkidle", timeout: 60_000 }).catch(() => {});
   await page.waitForTimeout(3_000);
-  const loginPageReturned = await page
-    .locator('input[id="username"], input[id="password"], input[type="password"]')
-    .first()
-    .isVisible()
-    .catch(() => false);
+  const loginPageReturned = await isLoginPage(page);
   if (loginPageReturned) {
     throw new Error(
       "Login did not persist after redirect. Check MARSMIND_USERNAME / MARSMIND_PASSWORD " +
@@ -519,10 +533,22 @@ async function main() {
   const browser = await chromium.launch({ headless: true });
   let page;
   try {
-    const context = await browser.newContext({ acceptDownloads: true });
+    const storageState = parseStorageState();
+    const contextOptions = { acceptDownloads: true };
+    if (storageState) {
+      contextOptions.storageState = storageState;
+    }
+    const context = await browser.newContext(contextOptions);
     page = await context.newPage();
 
-    await loginToMarsMind(page);
+    await page.goto(DATA_EXPORT_URL, { waitUntil: "networkidle", timeout: 60_000 }).catch(() => {});
+    const authenticatedViaStorageState = storageState && !(await isLoginPage(page));
+    if (!authenticatedViaStorageState) {
+      if (storageState) {
+        console.warn("Stored MarsMind login state was not accepted; falling back to username/password login.");
+      }
+      await loginToMarsMind(page);
+    }
     await page.waitForTimeout(2_000);
     await selectPreviousDay(page, metricDate);
     await page.waitForTimeout(500);
