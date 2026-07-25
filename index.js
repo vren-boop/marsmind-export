@@ -15,6 +15,29 @@ const COMMUNICATION_WINDOW_NAME =
 const TIME_ZONE = process.env.TIME_ZONE || "Asia/Shanghai";
 
 const PREVIOUS_DAY_TEXTS = ["前一日", "前一天", "昨天", "昨日"];
+const CUSTOM_DATE_TEXTS = ["自定义", "自定义时间", "自定义日期", "自定义范围"];
+const DATE_PICKER_TRIGGER_SELECTORS = [
+  'input[placeholder*="日期"]',
+  'input[placeholder*="时间"]',
+  'input[placeholder*="开始"]',
+  'input[placeholder*="结束"]',
+  ".ant-picker",
+  ".ant-picker-range",
+  ".ant-calendar-picker",
+  ".el-date-editor",
+  ".el-range-editor",
+];
+const DATE_INPUT_SELECTORS = [
+  'input[placeholder*="日期"]',
+  'input[placeholder*="时间"]',
+  'input[placeholder*="开始"]',
+  'input[placeholder*="结束"]',
+  ".ant-picker input",
+  ".ant-calendar-input",
+  ".el-range-input",
+  ".el-date-editor input",
+];
+const DATE_CONFIRM_TEXTS = ["确定", "确认", "应用", "Apply", "OK"];
 const EXPORT_BUTTON_TEXTS = ["导出", "导 出", "导出数据", "下载", "Export"];
 const COMM_WINDOW_LABEL_TEXTS = ["沟通窗口", "会话窗口", "客服窗口"];
 
@@ -92,6 +115,83 @@ async function clickFirstText(page, texts, label) {
   throw new Error(`Could not find ${label}. Tried: ${texts.join(", ")}.`);
 }
 
+async function clickFirstTextIfVisible(page, texts) {
+  for (const text of texts) {
+    const locator = page.getByText(text, { exact: false }).first();
+    if ((await locator.count()) > 0 && (await locator.isVisible().catch(() => false))) {
+      await locator.click();
+      return true;
+    }
+  }
+  return false;
+}
+
+async function clickFirstVisibleOptional(page, selectors) {
+  for (const selector of selectors.filter(Boolean)) {
+    const locator = page.locator(selector).first();
+    if ((await locator.count()) > 0 && (await locator.isVisible().catch(() => false))) {
+      await locator.click();
+      return true;
+    }
+  }
+  return false;
+}
+
+async function fillVisibleDateInputs(page, selectors, metricDate) {
+  const uniqueSelectors = [...new Set(selectors.filter(Boolean))];
+  const visibleInputs = [];
+  for (const selector of uniqueSelectors) {
+    const locator = page.locator(selector);
+    const count = await locator.count();
+    for (let i = 0; i < count; i += 1) {
+      const input = locator.nth(i);
+      if (await input.isVisible().catch(() => false)) {
+        visibleInputs.push(input);
+      }
+    }
+  }
+
+  if (!visibleInputs.length) {
+    throw new Error("Could not find visible date input(s). Set DATE_INPUT_SELECTOR.");
+  }
+
+  const inputsToFill = visibleInputs.slice(0, Math.min(2, visibleInputs.length));
+  for (const input of inputsToFill) {
+    await input.click({ clickCount: 3 }).catch(() => {});
+    await input.fill(metricDate);
+  }
+  const lastInput = inputsToFill.at(-1);
+  if (lastInput) {
+    await lastInput.press("Enter").catch(() => {});
+  }
+}
+
+async function selectCustomDateRange(page, metricDate) {
+  const opened =
+    (await clickFirstVisibleOptional(page, [
+      process.env.DATE_PICKER_SELECTOR,
+      ...DATE_PICKER_TRIGGER_SELECTORS,
+    ])) || (await clickFirstTextIfVisible(page, ["日期", "时间", "选择日期"]));
+
+  if (!opened) {
+    throw new Error(
+      "Could not open date picker. Set DATE_PICKER_SELECTOR or DATE_INPUT_SELECTOR."
+    );
+  }
+
+  await page.waitForTimeout(300);
+  await clickFirstTextIfVisible(page, CUSTOM_DATE_TEXTS);
+  await page.waitForTimeout(300);
+
+  await fillVisibleDateInputs(
+    page,
+    [process.env.DATE_INPUT_SELECTOR, ...DATE_INPUT_SELECTORS],
+    metricDate
+  );
+  await page.waitForTimeout(300);
+  await clickFirstTextIfVisible(page, DATE_CONFIRM_TEXTS);
+}
+
 async function loginToMarsMind(page) {
   const username = requiredEnv("MARSMIND_USERNAME");
   const password = requiredEnv("MARSMIND_PASSWORD");
@@ -147,10 +247,16 @@ async function selectPreviousDay(page, metricDate) {
     return;
   }
   if (process.env.DATE_INPUT_SELECTOR) {
-    const input = page.locator(process.env.DATE_INPUT_SELECTOR).first();
-    await input.fill(metricDate);
-    await input.press("Enter").catch(() => {});
+    await fillVisibleDateInputs(page, [process.env.DATE_INPUT_SELECTOR], metricDate);
     return;
+  }
+  try {
+    await selectCustomDateRange(page, metricDate);
+    return;
+  } catch (customDateError) {
+    console.warn(
+      `Custom date selection failed, falling back to preset previous-day button: ${customDateError.message}`
+    );
   }
   await clickFirstText(page, PREVIOUS_DAY_TEXTS, "previous-day range button");
 }
@@ -369,3 +475,4 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
+
