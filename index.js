@@ -17,6 +17,7 @@ const TIME_ZONE = process.env.TIME_ZONE || "Asia/Shanghai";
 const TODAY_TEXTS = ["当天", "今天", "今日"];
 const PREVIOUS_DAY_TEXTS = ["前一日", "前一天", "昨天", "昨日"];
 const CUSTOM_DATE_TEXTS = ["自定义", "自定义时间", "自定义日期", "自定义范围"];
+const DATE_RANGE_DROPDOWN_TEXTS = ["最近30天", "最近7天", "最近3天", "当天", "自定义"];
 const DATE_PICKER_TRIGGER_SELECTORS = [
   'input[placeholder*="日期"]',
   'input[placeholder*="时间"]',
@@ -167,12 +168,23 @@ async function fillVisibleDateInputs(page, selectors, metricDate) {
   }
 }
 
+async function openDateRangeDropdown(page) {
+  if (process.env.DATE_RANGE_SELECTOR) {
+    await page.locator(process.env.DATE_RANGE_SELECTOR).first().click();
+    return;
+  }
+  await clickFirstText(page, DATE_RANGE_DROPDOWN_TEXTS, "date-range dropdown");
+}
+
 async function selectCustomDateRange(page, metricDate) {
   const opened =
     (await clickFirstVisibleOptional(page, [
+      process.env.DATE_RANGE_SELECTOR,
       process.env.DATE_PICKER_SELECTOR,
       ...DATE_PICKER_TRIGGER_SELECTORS,
-    ])) || (await clickFirstTextIfVisible(page, ["日期", "时间", "选择日期"]));
+    ])) ||
+    (await clickFirstTextIfVisible(page, DATE_RANGE_DROPDOWN_TEXTS)) ||
+    (await clickFirstTextIfVisible(page, ["日期", "时间", "选择日期"]));
 
   if (!opened) {
     throw new Error(
@@ -243,10 +255,6 @@ async function loginToMarsMind(page) {
 }
 
 async function selectPreviousDay(page, metricDate) {
-  if (process.env.DATE_RANGE_SELECTOR) {
-    await page.locator(process.env.DATE_RANGE_SELECTOR).first().click();
-    return;
-  }
   if (process.env.PREVIOUS_DAY_SELECTOR) {
     await page.locator(process.env.PREVIOUS_DAY_SELECTOR).first().click();
     return;
@@ -256,6 +264,8 @@ async function selectPreviousDay(page, metricDate) {
     return;
   }
   try {
+    await openDateRangeDropdown(page);
+    await page.waitForTimeout(300);
     await clickFirstText(page, TODAY_TEXTS, "today range button");
     return;
   } catch (todayRangeError) {

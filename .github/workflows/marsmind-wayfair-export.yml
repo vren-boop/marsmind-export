@@ -2,8 +2,8 @@ name: MarsMind wayfair 每日导出
 
 on:
   schedule:
-    # 02:00 UTC == 10:00 Asia/Shanghai。GitHub 定时为尽力而为，偶尔会晚几分钟。
-    - cron: "0 2 * * *"
+    # 15:55 UTC == 23:55 Asia/Shanghai。GitHub 定时为尽力而为，偶尔会晚几分钟。
+    - cron: "55 15 * * *"
   workflow_dispatch: {}
 
 jobs:
