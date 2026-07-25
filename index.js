@@ -243,10 +243,12 @@ async function loginToMarsMind(page) {
 
   const usernameSelectors = [
     process.env.USERNAME_SELECTOR,
+    'input[id="username"]',
     'input[type="email"]',
     'input[name="email"]',
     'input[name="username"]',
     'input[name="account"]',
+    'input[placeholder*="用户名"]',
     'input[placeholder*="邮箱"]',
     'input[placeholder*="账号"]',
     'input[type="text"]',
@@ -254,6 +256,7 @@ async function loginToMarsMind(page) {
 
   const passwordSelectors = [
     process.env.PASSWORD_SELECTOR,
+    'input[id="password"]',
     'input[type="password"]',
     'input[name="password"]',
     'input[placeholder*="密码"]',
@@ -281,7 +284,26 @@ async function loginToMarsMind(page) {
   await clickFirstVisible(page, loginButtonSelectors, "login button");
 
   await page.waitForLoadState("networkidle", { timeout: 60_000 }).catch(() => {});
-  await page.goto(DATA_EXPORT_URL, { waitUntil: "networkidle", timeout: 60_000 });
+  await page.waitForTimeout(2_000);
+
+  const loginPageStillVisible = await page
+    .locator('input[id="password"], input[type="password"]')
+    .first()
+    .isVisible()
+    .catch(() => false);
+  if (loginPageStillVisible) {
+    const pageText = await page.locator("body").innerText().catch(() => "");
+    const hint = pageText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .find((line) => /错误|失败|无效|验证码|用户名|密码/.test(line));
+    throw new Error(
+      `Login did not succeed${hint ? `: ${hint}` : ". Still on login page after submit."}`
+    );
+  }
+
+  await page.goto(DATA_EXPORT_URL, { waitUntil: "networkidle", timeout: 60_000 }).catch(() => {});
 }
 
 async function selectPreviousDay(page, metricDate) {
