@@ -14,6 +14,7 @@ const COMMUNICATION_WINDOW_NAME =
   process.env.COMMUNICATION_WINDOW_NAME || "wayfair AI助理";
 const TIME_ZONE = process.env.TIME_ZONE || "Asia/Shanghai";
 
+const TODAY_TEXTS = ["当天", "今天", "今日"];
 const PREVIOUS_DAY_TEXTS = ["前一日", "前一天", "昨天", "昨日"];
 const CUSTOM_DATE_TEXTS = ["自定义", "自定义时间", "自定义日期", "自定义范围"];
 const DATE_PICKER_TRIGGER_SELECTORS = [
@@ -53,13 +54,13 @@ function getMetricDate() {
   if (process.env.METRIC_DATE) {
     return process.env.METRIC_DATE;
   }
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const today = new Date();
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: TIME_ZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).formatToParts(yesterday);
+  }).formatToParts(today);
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${values.year}-${values.month}-${values.day}`;
 }
@@ -242,6 +243,10 @@ async function loginToMarsMind(page) {
 }
 
 async function selectPreviousDay(page, metricDate) {
+  if (process.env.DATE_RANGE_SELECTOR) {
+    await page.locator(process.env.DATE_RANGE_SELECTOR).first().click();
+    return;
+  }
   if (process.env.PREVIOUS_DAY_SELECTOR) {
     await page.locator(process.env.PREVIOUS_DAY_SELECTOR).first().click();
     return;
@@ -249,6 +254,14 @@ async function selectPreviousDay(page, metricDate) {
   if (process.env.DATE_INPUT_SELECTOR) {
     await fillVisibleDateInputs(page, [process.env.DATE_INPUT_SELECTOR], metricDate);
     return;
+  }
+  try {
+    await clickFirstText(page, TODAY_TEXTS, "today range button");
+    return;
+  } catch (todayRangeError) {
+    console.warn(
+      `Today preset selection failed, trying custom date flow: ${todayRangeError.message}`
+    );
   }
   try {
     await selectCustomDateRange(page, metricDate);
@@ -475,4 +488,3 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
-
