@@ -304,6 +304,17 @@ async function loginToMarsMind(page) {
   }
 
   await page.goto(DATA_EXPORT_URL, { waitUntil: "networkidle", timeout: 60_000 }).catch(() => {});
+  const loginPageReturned = await page
+    .locator('input[id="username"], input[id="password"], input[type="password"]')
+    .first()
+    .isVisible()
+    .catch(() => false);
+  if (loginPageReturned) {
+    throw new Error(
+      "Login did not persist after redirect. Check MARSMIND_USERNAME / MARSMIND_PASSWORD " +
+        "secrets and whether the account requires an extra verification step."
+    );
+  }
 }
 
 async function selectPreviousDay(page, metricDate) {
