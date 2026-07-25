@@ -1,0 +1,54 @@
+name: MarsMind wayfair 每日导出
+
+on:
+  schedule:
+    # 02:00 UTC == 10:00 Asia/Shanghai。GitHub 定时为尽力而为，偶尔会晚几分钟。
+    - cron: "0 2 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Export MarsMind wayfair chats to Google Sheet
+        run: node index.js
+        env:
+          MARSMIND_USERNAME: ${{ secrets.MARSMIND_USERNAME }}
+          MARSMIND_PASSWORD: ${{ secrets.MARSMIND_PASSWORD }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_SHEET_ID: "1nibt62SYKxDdF7QWt7tKnApUBDJ9KD14YeoCw3fJnfs"
+          GOOGLE_WORKSHEET_NAME: "Wayfair AI助理 Daily Chats"
+          MARSMIND_DATA_EXPORT_URL: "https://admin.marsmind.cc/data-export"
+          COMMUNICATION_WINDOW_NAME: "wayfair AI助理"
+          TIME_ZONE: "Asia/Shanghai"
+
+      - name: Upload exported file
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: marsmind-export-file
+          path: export-*
+          if-no-files-found: ignore
+
+      - name: Upload failure snapshot
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: marsmind-failure-snapshot
+          path: |
+            last-failure.png
+            last-failure.html
+          if-no-files-found: ignore

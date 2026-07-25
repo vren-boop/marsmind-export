@@ -1,0 +1,14 @@
+{
+  "name": "marsmind-wayfair-export-cloud-run",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@googleapis/sheets": "latest",
+    "google-auth-library": "latest",
+    "playwright": "latest",
+    "xlsx": "latest"
+  }
+}
