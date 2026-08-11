@@ -1,31 +1,411 @@
-把下面内容粘贴到 `index.html`，用于测试：
-
-```html
-<!doctype html>
-<html lang="zh-CN">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GitHub Pages 测试</title>
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      font-family: Arial, sans-serif;
-      background: #f5f0fa;
-      color: #51006a;
-    }
-    main { text-align: center; }
-    h1 { font-size: 42px; margin-bottom: 8px; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WeCom AI Agent — User Research Synthesis</title>
+<style>
+  :root{
+    --purple:#7B189F;
+    --purple-dark:#51006A;
+    --purple-50:#FAF2FF;
+    --purple-100:#F1E4F7;
+    --purple-200:#E3CDEE;
+    --navy:#17233C;
+    --ink:#26222A;
+    --muted:#5F5862;
+    --line:#E8E3EA;
+    --soft:#F7F5F8;
+    --green:#1E7A55;
+    --green-soft:#EAF6F0;
+    --amber:#A86200;
+    --amber-soft:#FFF3DD;
+    --red:#B33A46;
+    --red-soft:#FCECEE;
+    --white:#FFFFFF;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;background:#EDEAF0}
+  body{margin:0;font-family:"Poppins","Avenir Next",Arial,Helvetica,sans-serif;color:var(--ink);background:#EDEAF0;overflow-x:hidden}
+  .deck{display:flex;flex-direction:column;align-items:center;gap:28px;padding:28px 0 48px}
+  .slide-shell{position:relative;overflow:hidden;flex:0 0 auto}
+  .slide{
+    position:relative;width:1600px;height:900px;background:white;overflow:hidden;
+    padding:40px 58px 48px;box-shadow:0 18px 55px rgba(31,18,36,.12);border-radius:3px;
+    transform-origin:top left;
+  }
+  .topline{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .eyebrow{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--purple);font-weight:700}
+  .pageNo{font-size:12px;letter-spacing:.08em;color:#8A838D;font-weight:600}
+  h1{font-size:34px;line-height:1.14;margin:0;max-width:1380px;letter-spacing:-.022em;font-weight:750;color:#18151A}
+  .takeaway{margin-top:12px;background:var(--purple-50);border-left:5px solid var(--purple);padding:11px 16px;font-size:15px;line-height:1.32;font-weight:600;color:var(--purple-dark);border-radius:3px}
+  .footer{position:absolute;left:58px;right:58px;bottom:14px;border-top:1px solid var(--line);padding-top:7px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;font-size:9.5px;line-height:1.3;color:#837C86;letter-spacing:.02em}.footer span:first-child{max-width:82%}.footer span:last-child{white-space:nowrap}
+  .footer b{color:#5E5662;font-weight:700}
+  .grid{display:grid;gap:14px;min-width:0}
+  .card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 16px;min-width:0}
+  .card.soft{background:var(--soft);border-color:transparent}
+  .card.purple{background:var(--purple-50);border-color:var(--purple-100)}
+  .label{font-size:11px;text-transform:uppercase;letter-spacing:.075em;color:#7D7580;font-weight:700}
+  .kpi{font-size:31px;line-height:1;color:var(--purple-dark);font-weight:800;letter-spacing:-.03em;margin-top:6px}
+  .kpiLabel{font-size:12.5px;line-height:1.28;color:#3E3941;margin-top:6px;font-weight:600}
+  .sub{font-size:10.8px;color:#8A838D;margin-top:4px;line-height:1.32}
+  .sectionTitle{font-size:14.5px;font-weight:800;color:#201C22;margin-bottom:9px;line-height:1.25}
+  .barRow{display:grid;grid-template-columns:190px minmax(0,1fr) 38px;gap:9px;align-items:center;margin:9px 0}
+  .barLabel{font-size:12px;line-height:1.2;font-weight:650;color:#38323A}
+  .barTrack{height:10px;background:#EFEAF1;border-radius:10px;overflow:hidden}
+  .barFill{height:100%;background:linear-gradient(90deg,var(--purple),#A45CC1);border-radius:10px}
+  .barValue{font-size:12px;text-align:right;font-weight:750;color:#5A505D}
+  .legendNote{font-size:9.6px;color:#8C858E;margin-top:7px;line-height:1.35}
+  .insight{display:flex;gap:12px;align-items:flex-start}
+  .numDot{width:24px;height:24px;flex:0 0 24px;border-radius:50%;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+  .insight h3{font-size:12.5px;line-height:1.25;margin:0 0 4px;color:#262128}
+  .insight p{font-size:11.2px;line-height:1.36;margin:0;color:#5D5660}
+  .chip{display:inline-flex;align-items:center;border-radius:100px;padding:5px 9px;font-size:11px;font-weight:700;margin-right:6px;margin-top:6px}
+  .chip.green{background:var(--green-soft);color:var(--green)}
+  .chip.amber{background:var(--amber-soft);color:var(--amber)}
+  .chip.red{background:var(--red-soft);color:var(--red)}
+  .chip.purple{background:var(--purple-100);color:var(--purple-dark)}
+  .quote{border-left:3px solid var(--purple-200);padding-left:9px;margin-top:6px;font-size:10.2px;line-height:1.34;color:#6F6871;font-style:italic}
+  .miniHeader{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .metricRow{display:flex;align-items:center;gap:9px;margin:10px 0}
+  .metricName{width:175px;font-size:11.8px;font-weight:650;color:#3E3841}
+  .metricTrack{flex:1;height:14px;background:#EEEAF0;border-radius:12px;overflow:hidden}
+  .metricFill{height:100%;border-radius:12px;background:var(--purple)}
+  .metricFill.light{background:#C8A6D8}
+  .metricPct{width:52px;text-align:right;font-size:12.5px;font-weight:800;color:#4E4551}
+  .gapBadge{display:inline-block;background:var(--red-soft);color:var(--red);font-weight:800;border-radius:6px;padding:5px 8px;font-size:12px}
+  .stackbar{height:24px;border-radius:8px;overflow:hidden;display:flex;background:#eee}
+  .seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:white;font-weight:750}
+  .seg.s1{background:var(--purple-dark)} .seg.s2{background:var(--purple)} .seg.s3{background:#B78ACB}
+  .process{display:grid;grid-template-columns:repeat(6,1fr);align-items:center;margin-top:8px}
+  .step{position:relative;text-align:center;padding:0 10px}
+  .step:not(:last-child):after{content:"";position:absolute;right:-8%;top:24px;width:16%;height:2px;background:#D8CCDE}
+  .stepCircle{width:48px;height:48px;margin:0 auto 6px;border-radius:50%;background:var(--purple-50);border:2px solid var(--purple-200);display:flex;align-items:center;justify-content:center;color:var(--purple);font-size:17px;font-weight:800}
+  .stepName{font-size:11.5px;font-weight:800;color:#353039}
+  .stepOwner{font-size:9.6px;color:#847D86;margin-top:3px;line-height:1.22}
+  .roadmap{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+  .road{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:white;position:relative;min-height:166px}
+  .road .n{position:absolute;top:11px;right:14px;font-size:29px;font-weight:850;color:#E5D5EB}
+  .road h3{font-size:15px;line-height:1.22;margin:0 0 8px;color:#241F26;max-width:82%}
+  .road .timing{font-size:10px;color:var(--purple);font-weight:800;letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px}
+  .road ul{padding-left:17px;margin:8px 0 0}
+  .road li{font-size:11px;line-height:1.34;color:#645D67;margin:4px 0}
+  .matrix{display:grid;grid-template-columns:44px 1fr 1fr;grid-template-rows:34px 1fr 1fr;gap:7px;margin-top:8px}
+  .axis{font-size:10px;color:#8A838D;font-weight:750;display:flex;align-items:center;justify-content:center;text-transform:uppercase;letter-spacing:.06em}
+  .cell{border:1px solid var(--line);border-radius:8px;padding:10px;background:#FBFAFC}
+  .cell.critical{background:var(--red-soft);border-color:#F1CED3}.cell.focus{background:var(--purple-50);border-color:var(--purple-200)}
+  .cell h4{font-size:12px;margin:0 0 5px}.cell p{font-size:10.6px;line-height:1.35;margin:0;color:#766E78}
+  .successRow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+  .success{background:#F8F7F9;border-radius:8px;padding:11px 12px;border:1px solid #EEEAF0}
+  .success b{display:block;font-size:10.8px;color:#433D45;margin-bottom:3px}.success span{font-size:9.7px;color:#7A737C;line-height:1.28}
+  .nav{position:fixed;right:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:20}
+  .nav a{width:10px;height:10px;border-radius:50%;background:#A69FAA;border:2px solid white;box-shadow:0 0 0 1px #CFC9D1}
+  @media print{body{background:white}.deck{gap:0;padding:0}.slide-shell{width:1600px!important;height:900px!important;overflow:visible}.slide{width:1600px;height:900px;transform:none!important;box-shadow:none;border-radius:0;page-break-after:always}.nav{display:none}}
+</style>
+
+<style>
+/* Dense 16:9 review layout — fills the canvas without changing content */
+.slide{padding:38px 58px 50px}
+.topline{margin-bottom:10px}
+h1{font-size:40px;line-height:1.08;max-width:1450px}
+.takeaway{margin-top:13px;padding:14px 18px;font-size:18px;line-height:1.32}
+.card{padding:17px 18px}
+.label{font-size:12.5px}
+.kpi{font-size:38px;margin-top:9px;line-height:1.05}
+.kpiLabel{font-size:14.5px;line-height:1.28;margin-top:8px}
+.sub{font-size:13.2px;line-height:1.34;margin-top:5px;color:#716A74}
+.sectionTitle{font-size:17px;margin-bottom:11px}
+.insight h3{font-size:15px}
+.insight p{font-size:13.5px;line-height:1.38}
+.quote{font-size:13px;line-height:1.35;margin-top:8px;color:#665E69}
+.barRow{grid-template-columns:220px minmax(0,1fr) 42px;gap:11px;margin:13px 0}
+.barLabel{font-size:13.8px}
+.barTrack{height:13px}
+.barValue{font-size:14px}
+.legendNote{font-size:12.4px;line-height:1.35;margin-top:10px;color:#716A74}
+.metricRow{margin:14px 0}
+.metricName{width:190px;font-size:13.8px}
+.metricTrack{height:17px}
+.metricPct{font-size:14px}
+.footer{bottom:12px;font-size:11.2px;line-height:1.28;color:#6A626D}
+
+/* PAGE 1 */
+#s1 > .grid{grid-template-columns:minmax(0,35fr) minmax(0,65fr)!important;gap:18px!important;margin-top:18px!important;align-items:stretch!important;height:575px}
+#s1 > .grid > .grid:first-child{grid-template-columns:1fr 1fr!important;grid-template-rows:180px 180px 195px;gap:10px!important;height:575px;align-content:stretch!important}
+#s1 > .grid > .grid:first-child > .card{height:100%}
+#s1 > .grid > .grid:first-child > .card.soft{display:flex;flex-direction:column;justify-content:center;padding:18px 18px!important}
+#s1 > .grid > .card{height:575px;padding:18px 20px!important;display:flex;flex-direction:column}
+#s1 > .grid > .card > .grid{margin-top:auto!important;grid-template-columns:1fr 1fr!important;gap:12px!important}
+#s1 > .grid > .card > .grid .card{min-height:154px;padding:15px!important}
+#s1 .miniHeader{margin-bottom:11px}
+#s1 .chip{font-size:12.5px;padding:6px 10px}
+
+/* PAGE 2 */
+#s2 > .grid{grid-template-columns:minmax(0,28fr) minmax(0,39fr) minmax(0,33fr)!important;gap:16px!important;margin-top:18px!important;align-items:stretch!important;height:470px}
+#s2 > .grid > .grid:first-child{grid-template-rows:105px 105px 120px 110px;gap:10px!important;height:470px;align-content:stretch!important}
+#s2 > .grid > .grid:first-child > .card{height:100%;padding:13px 16px}
+#s2 > .grid > .card{height:470px;padding:18px 19px!important}
+#s2 > .grid > .card:nth-child(2){display:flex;flex-direction:column}
+#s2 > .grid > .card:nth-child(2) > .card.soft{padding:17px 15px!important}
+#s2 > .grid > .card:nth-child(2) > .card.soft:last-child{margin-top:12px!important}
+#s2 > .grid > .card:nth-child(3){display:flex;flex-direction:column}
+#s2 > .grid > .card:nth-child(3) > .grid{margin-top:auto!important;gap:10px!important}
+#s2 > .grid > .card:nth-child(3) > .grid .card{padding:15px!important;min-height:112px}
+#s2 .stackbar{height:30px;margin-top:3px}
+#s2 .seg{font-size:12px}
+
+/* PAGE 3 */
+#s3 .roadmap{gap:16px;margin-top:20px;grid-template-columns:repeat(3,1fr)}
+#s3 .road{min-height:292px;padding:20px 22px}
+#s3 .road .n{top:14px;right:17px;font-size:36px}
+#s3 .road h3{font-size:19px;line-height:1.22;margin-bottom:10px}
+#s3 .road .timing{font-size:12.6px;margin-bottom:10px}
+#s3 .road ul{padding-left:19px;margin-top:11px}
+#s3 .road li{font-size:14.2px;line-height:1.37;margin:7px 0;color:#58515B}
+#s3 > .grid{grid-template-columns:minmax(0,57fr) minmax(0,43fr)!important;gap:16px!important;margin-top:14px!important;height:314px}
+#s3 > .grid > .card{height:314px;padding:20px 21px!important;display:flex;flex-direction:column}
+#s3 .process{margin-top:18px}
+#s3 .stepCircle{width:62px;height:62px;font-size:20px;margin-bottom:9px}
+#s3 .step:not(:last-child):after{top:31px}
+#s3 .stepName{font-size:14px}
+#s3 .stepOwner{font-size:13px;line-height:1.28;margin-top:5px;color:#5B545E}
+#s3 .successRow{gap:12px;margin-top:16px;flex:1}
+#s3 .success{padding:20px 16px;min-height:172px;display:flex;flex-direction:column;justify-content:center}
+#s3 .success b{font-size:14px;margin-bottom:8px}
+#s3 .success span{font-size:13.4px;line-height:1.38;color:#5B545E}
+</style>
+
+
+<style>
+.srm-bottom{height:92px;margin-top:12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.srm-bottom .so{border:1px solid var(--line);border-radius:10px;padding:13px 15px;background:#fff;display:flex;gap:11px;align-items:flex-start}
+.srm-bottom .so.p{background:var(--purple-50);border-color:var(--purple-100)}
+.srm-bottom .soN{width:26px;height:26px;flex:0 0 26px;border-radius:50%;background:var(--purple);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px}
+.srm-bottom b{display:block;font-size:13.8px;line-height:1.22;color:#302A33;margin-bottom:4px}
+.srm-bottom span{font-size:12.5px;line-height:1.30;color:#5B545E}
+.roadOut{position:absolute;left:20px;right:20px;bottom:16px;border-top:1px solid var(--line);padding-top:10px;font-size:12.6px;line-height:1.30;color:#5B545E}
+.roadOut b{font-size:11.6px;color:var(--purple);letter-spacing:.06em;text-transform:uppercase;margin-right:5px}
+#s3 .road{padding-bottom:78px}
+</style>
+
 </head>
 <body>
-  <main>
-    <h1>发布成功 🎉</h1>
-    <p>这个 GitHub Pages 链接可以分享给任何人。</p>
-  </main>
+<div class="nav"><a href="#s1" title="Supplier feedback"></a><a href="#s2" title="SRM feedback"></a><a href="#s3" title="Next steps"></a></div>
+<div class="deck">
+
+<!-- PAGE 1 -->
+<section class="slide" id="s1">
+  <div class="topline"><div class="eyebrow">WeCom AI Agent · User Research Synthesis</div><div class="pageNo">01 / 03</div></div>
+  <h1>Supplier feedback: strong experience signals, with a clear opportunity to increase answer usefulness</h1>
+  <div class="takeaway"><b>Supplier response is encouraging:</b> speed, satisfaction and continuation intent are strong. The clearest next opportunity is to make answers even more precise, complete and actionable.</div>
+
+  <div class="grid" style="grid-template-columns: 36% 64%; margin-top:16px; align-items:start;">
+    <div class="grid" style="grid-template-columns:1fr 1fr; align-content:start; gap:10px;">
+      <div class="card purple"><div class="label">Response speed</div><div class="kpi">98.2%</div><div class="kpiLabel">Top-2 response options</div><div class="sub">54 / 55 · 85.5% chose the top option</div></div>
+      <div class="card"><div class="label">Effective resolution</div><div class="kpi">76.4%</div><div class="kpiLabel">Top-2 response options</div><div class="sub">42 / 55 selected Top-2</div></div>
+      <div class="card"><div class="label">Overall satisfaction</div><div class="kpi">80.0%</div><div class="kpiLabel">Top-2 response options</div><div class="sub">44 / 55 selected Top-2</div></div>
+      <div class="card purple"><div class="label">Continue using</div><div class="kpi">94.5%</div><div class="kpiLabel">Selected option 1</div><div class="sub">52 / 55 selected option 1</div></div>
+
+      <div class="card soft" style="grid-column:1/3;padding:13px 15px;">
+        <div class="sectionTitle" style="margin-bottom:8px">Higher-frequency users remain highly positive</div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="font-size:30px;font-weight:850;color:var(--purple-dark)">90.5%</div>
+          <div style="font-size:14px;line-height:1.35;color:#5D5660"><b>Highest-frequency cohort (n=21):</b> resolution and satisfaction Top-2 are both <b>90.5%</b>—a positive signal for sustained usage. Association only; no causal inference.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:14px 18px;">
+      <div class="miniHeader"><div><div class="sectionTitle" style="margin:0">What suppliers want next</div><div class="sub">22 / 55 responses contained a specific improvement direction</div></div><div class="chip purple">22 / 55 specific directions</div></div>
+      <div class="barRow"><div class="barLabel">Precision / specificity / correctness</div><div class="barTrack"><div class="barFill" style="width:100%"></div></div><div class="barValue">10</div></div>
+      <div class="barRow"><div class="barLabel">Depth & actionable guidance</div><div class="barTrack"><div class="barFill" style="width:90%"></div></div><div class="barValue">9</div></div>
+      <div class="barRow"><div class="barLabel">Knowledge coverage / freshness</div><div class="barTrack"><div class="barFill" style="width:60%"></div></div><div class="barValue">6</div></div>
+      <div class="barRow"><div class="barLabel">Context / multimodal / follow-up flow</div><div class="barTrack"><div class="barFill" style="width:40%"></div></div><div class="barValue">4</div></div>
+      <div class="barRow"><div class="barLabel">Human fallback continuity</div><div class="barTrack"><div class="barFill" style="width:20%"></div></div><div class="barValue">2</div></div>
+      <div class="legendNote">Non-exclusive multi-label coding. Three additional comments asked for generic improvement without a specific direction.</div>
+
+      <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;">
+        <div class="card soft" style="padding:12px 13px">
+          <div class="insight"><div class="numDot">1</div><div><h3>Strong speed lets us focus on answer usefulness</h3><p>With response speed already strong, the next gains are in precision, completeness, freshness and deeper-question handling.</p><div class="quote">“答案版本不是最新的…总是说一些模棱两可的话”</div></div></div>
+        </div>
+        <div class="card soft" style="padding:12px 13px">
+          <div class="insight"><div class="numDot">2</div><div><h3>Next opportunity: make answers easier to act on</h3><p>Concrete next steps, source links and sufficient context can make already-useful answers more actionable.</p><div class="quote">“希望回复可以更详细一些，以及可以提供相关帮助文档的路径”</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer"><span><b>Method:</b> Supplier survey n=55 response records · Aug 3–10, 2026. Two entered SUIDs appear twice; keeping the latest response shifts key closed-ended rates by ≤0.9 pp. “Top-2” = response options 1–2.</span><span>WAYFAIR CONFIDENTIAL</span></div>
+</section>
+
+<!-- PAGE 2 -->
+<section class="slide" id="s2">
+  <div class="topline"><div class="eyebrow">WeCom AI Agent · User Research Synthesis</div><div class="pageNo">02 / 03</div></div>
+  <h1>SRM feedback: a positive quality foundation is in place; the next opportunity is greater productivity impact</h1>
+  <div class="takeaway"><b>11/12</b> say accuracy basically meets expectations and <b>12/12</b> support continued optimization. Next, quantify the <b>additional handling required after an AI response</b> to understand where quality translates into productivity impact.</div>
+
+  <div class="grid" style="grid-template-columns: 28% 39% 33%; gap:14px; margin-top:16px; align-items:start;">
+    <div class="grid" style="grid-template-columns:1fr; gap:10px; align-content:start">
+      <div class="card purple"><div class="label">Continuation intent</div><div class="kpi">100%</div><div class="kpiLabel">12 / 12 strongly want continued service + optimization</div></div>
+      <div class="card"><div class="label">Perceived accuracy</div><div class="kpi">91.7%</div><div class="kpiLabel">11 / 12 say “basically meets expectations”</div></div>
+      <div class="card"><div class="label">Substantial time saving</div><div class="kpi">25.0%</div><div class="kpiLabel">3 / 12 report substantial time saving</div><div class="sub">9 / 12 report some time saving, with further upside</div></div>
+      <div class="card soft" style="padding:14px 16px"><div class="sectionTitle" style="font-size:15px;margin:0 0 6px">Respondent context</div><div style="font-size:13.2px;line-height:1.34;color:#5D5660">11/12 used or observed the Agent; 9/12 manage suppliers from the Jun–Jul test.</div></div>
+    </div>
+
+    <div class="card" style="padding:14px 17px">
+      <div class="sectionTitle">Perceived quality is positive; productivity impact has further upside</div>
+      <div class="sub" style="margin-bottom:10px">Directional comparison only · different questions and scales</div>
+      <div class="metricRow"><div class="metricName">Accuracy meets expectation</div><div class="metricTrack"><div class="metricFill" style="width:91.7%"></div></div><div class="metricPct">91.7%</div></div>
+      <div class="metricRow"><div class="metricName">Large time saving</div><div class="metricTrack"><div class="metricFill light" style="width:25%"></div></div><div class="metricPct">25.0%</div></div>
+      <div style="margin:8px 0 12px;text-align:right"><span class="chip purple" style="margin:0">Directional comparison only</span></div>
+
+      <div class="card soft" style="padding:12px 13px">
+        <div class="insight"><div class="numDot">1</div><div><h3>Understand what drives productivity impact</h3><p>Measure post-AI follow-up effort to understand where additional handling remains and how it relates to reported productivity impact.</p></div></div>
+      </div>
+      <div class="card soft" style="padding:12px 13px;margin-top:8px">
+        <div class="insight"><div class="numDot">2</div><div><h3>Expand value through stronger trigger / context coverage</h3><p>One SRM highlighted a follow-up scenario when users do not @ the Agent—an opportunity to validate and strengthen trigger/context coverage.</p></div></div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:14px 17px">
+      <div class="sectionTitle">Feedback preferences provide a practical path to a two-layer intake</div>
+      <div class="sub" style="margin-bottom:9px">Preferred way to submit AI responses needing review (n=12)</div>
+      <div class="stackbar">
+        <div class="seg s1" style="width:50%">Slack Workflow · 50%</div>
+        <div class="seg s2" style="width:41.7%">G-Sheet · 42%</div>
+        <div class="seg s3" style="width:8.3%">Other · 8%</div>
+      </div>
+      <div style="margin-top:12px;font-size:13px;line-height:1.34;color:#5D5660"><b>Raw split:</b> Workflow 6/12 · G-Sheet 5/12 · Other 1/12. The Other response supports low-friction capture qualitatively only.</div>
+      <div class="grid" style="grid-template-columns:1fr;gap:8px;margin-top:11px">
+        <div class="card purple" style="padding:11px 12px"><div class="label">Recommended design</div><div style="font-size:13px;font-weight:750;margin-top:5px">Easy capture → structured tracker → owner / fix / retest</div></div>
+        <div class="card soft" style="padding:11px 12px"><div class="label">Why it matters</div><div style="font-size:12.6px;line-height:1.32;margin-top:5px;color:#5D5660">Keep reporting easy while preserving ownership, fix status and retest closure.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="srm-bottom">
+    <div class="so p"><div class="soN">1</div><div><b>Strong foundation to build on</b><span>12/12 support continued service + optimization.</span></div></div>
+    <div class="so"><div class="soN">2</div><div><b>Increase productivity impact</b><span>Measure where additional handling remains after AI responses.</span></div></div>
+    <div class="so"><div class="soN">3</div><div><b>Make feedback easy and traceable</b><span>Low-friction capture + structured governance tracker.</span></div></div>
+  </div>
+
+  <div class="footer"><span><b>Method:</b> SRM survey n=12 · Aug 3–7, 2026. Percentages are direct response shares. “Other” remains a separate 1/12 response; its bot suggestion is used only as qualitative evidence.</span><span>WAYFAIR CONFIDENTIAL</span></div>
+</section>
+
+<!-- PAGE 3 -->
+<section class="slide" id="s3">
+  <div class="topline"><div class="eyebrow">WeCom AI Agent · Product Recommendation</div><div class="pageNo">03 / 03</div></div>
+  <h1>Next steps: build on positive user signals with a measurable Agent Health and value loop</h1>
+  <div class="takeaway">We now have <b>positive user signals</b> and clear improvement hypotheses. The next step is to validate them in production, focus on the highest-value opportunities and quantify business impact.</div>
+
+  <div class="roadmap">
+    <div class="road">
+      <div class="n">01</div><div class="timing">Next 2 weeks</div><h3>Confirm the current-state Health baseline</h3>
+      <ul>
+        <li>Review <b>100–150 complete Q&A cases</b> across key channels, topics and scenarios.</li>
+        <li>Calibrate on <b>10–15 cases</b>; double-review ~<b>20%</b>.</li>
+        <li>Score quality + correction need + risk / freshness flags.</li>
+      </ul>
+      <div class="roadOut"><b>Output</b> Health baseline + quality profile + priority opportunities.</div>
+    </div>
+    <div class="road">
+      <div class="n">02</div><div class="timing">After validation</div><h3>Focus on the highest-value validated opportunities</h3>
+      <ul>
+        <li>Convert <b>validated production findings</b> into a focused improvement backlog.</li>
+        <li>Rank by <b>frequency × severity × business impact</b>.</li>
+        <li>Route by root cause: content, retrieval, prompt, interaction or tech.</li>
+      </ul>
+      <div class="roadOut"><b>Output</b> Evidence-ranked opportunities + root cause + owner.</div>
+    </div>
+    <div class="road">
+      <div class="n">03</div><div class="timing">Operationalize through Oct</div><h3>Operationalize continuous improvement and quantify value</h3>
+      <ul>
+        <li><b>Low-friction capture</b> → structured review & improvement tracker.</li>
+        <li>Track root cause, owner, due date, fix and regression result.</li>
+        <li>Add <b>post-AI follow-up effort</b> to value measurement.</li>
+      </ul>
+      <div class="roadOut"><b>Output</b> Improvement loop + Health scorecard + value measures.</div>
+    </div>
+  </div>
+
+  <div class="grid" style="grid-template-columns: 57% 43%; gap:14px; margin-top:12px;">
+    <div class="card" style="padding:13px 15px">
+      <div class="sectionTitle" style="margin-bottom:6px">Operating loop & ownership</div>
+      <div class="process">
+        <div class="step"><div class="stepCircle">D</div><div class="stepName">Data</div><div class="stepOwner">GPRE prepares<br/>+ samples</div></div>
+        <div class="step"><div class="stepCircle">R</div><div class="stepName">Review</div><div class="stepOwner">Supplier Mgmt<br/>SMEs validate</div></div>
+        <div class="step"><div class="stepCircle">D</div><div class="stepName">Diagnose</div><div class="stepOwner">GPRE + SME<br/>classify root cause</div></div>
+        <div class="step"><div class="stepCircle">F</div><div class="stepName">Fix</div><div class="stepOwner">Vendor / Tech /<br/>Content owner</div></div>
+        <div class="step"><div class="stepCircle">V</div><div class="stepName">Validate</div><div class="stepOwner">Regression test +<br/>business acceptance</div></div>
+        <div class="step"><div class="stepCircle">I</div><div class="stepName">Improve</div><div class="stepOwner">Scorecard +<br/>next priority</div></div>
+      </div>
+      <div style="margin-top:auto;background:var(--purple-50);padding:12px 13px;border-radius:7px;font-size:13.2px;line-height:1.34;color:#514457"><b>Principle:</b> Positive user signals → production evidence → focused improvement → validated progress.</div>
+    </div>
+
+    <div class="card" style="padding:13px 15px">
+      <div class="sectionTitle" style="margin-bottom:6px">How we will demonstrate progress</div>
+      <div class="successRow">
+        <div class="success"><b>1 · Agent Health</b><span>Baseline · answer quality · correction need · risk visibility.</span></div>
+        <div class="success"><b>2 · Improvement efficacy</b><span>Regression pass · repeat issue reduction · validated closure.</span></div>
+        <div class="success"><b>3 · Business value</b><span>Follow-up effort · resolution · response time · workflow efficiency.</span></div>
+      </div>
+      <div style="margin-top:auto;border-top:1px solid var(--line);padding-top:12px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:13.4px;color:#625B65;font-weight:600">Reply volume remains an adoption signal</span><span class="chip purple" style="margin:0">Complement with Health + Value</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer"><span><b>Decision logic:</b> Positive user signals → validated Agent Health evidence → focused improvement → measurable business value.</span><span>WAYFAIR CONFIDENTIAL</span></div>
+</section>
+
+</div>
+<script>
+  document.addEventListener('keydown', (e)=>{
+    const slides=[...document.querySelectorAll('.slide')];
+    const y=window.scrollY+window.innerHeight/2;
+    let idx=slides.findIndex(s=>s.offsetTop<=y && s.offsetTop+s.offsetHeight>=y);
+    if(idx<0) idx=0;
+    if(e.key==='ArrowDown'||e.key==='PageDown'||e.key==='ArrowRight'){
+      slides[Math.min(slides.length-1,idx+1)].scrollIntoView({behavior:'smooth',block:'center'});
+    }
+    if(e.key==='ArrowUp'||e.key==='PageUp'||e.key==='ArrowLeft'){
+      slides[Math.max(0,idx-1)].scrollIntoView({behavior:'smooth',block:'center'});
+    }
+  });
+</script>
+
+<script>
+(function(){
+  const BASE_W = 1600, BASE_H = 900;
+  const deck = document.querySelector('.deck');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  slides.forEach(slide => {
+    const shell = document.createElement('div');
+    shell.className = 'slide-shell';
+    slide.parentNode.insertBefore(shell, slide);
+    shell.appendChild(slide);
+  });
+  function fitSlides(){
+    const maxW = Math.max(320, window.innerWidth * 0.96);
+    const scale = Math.min(1, maxW / BASE_W);
+    document.querySelectorAll('.slide-shell').forEach(shell => {
+      shell.style.width = (BASE_W * scale) + 'px';
+      shell.style.height = (BASE_H * scale) + 'px';
+      const slide = shell.querySelector('.slide');
+      slide.style.transform = 'scale(' + scale + ')';
+    });
+  }
+  fitSlides();
+  window.addEventListener('resize', fitSlides);
+  document.querySelectorAll('.nav a').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if(!target) return;
+      e.preventDefault();
+      target.closest('.slide-shell').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+})();
+</script>
 </body>
 </html>
-```
